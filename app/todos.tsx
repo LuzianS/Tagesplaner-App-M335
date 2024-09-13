@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import { Link } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import { Link, useLocalSearchParams } from 'expo-router';
 
 
 const Todos = () => {
+    const { date } = useLocalSearchParams();
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [todos, setTodos] = useState([]);
     const navigation = useNavigation();
+
+    useEffect(() => {
+        if (date) {
+            setSelectedDate(date as string);
+        }
+    }, [date]);
 
     useEffect(() => {
         const loadTodos = async () => {
@@ -33,7 +41,7 @@ const Todos = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Tagesplaner</Text>
+            <Text style={styles.header}>{selectedDate}</Text>
             <FlatList
                 data={todos}
                 renderItem={renderItem}
@@ -73,12 +81,14 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 30,
         right: 30,
-        backgroundColor: 'green',
+        backgroundColor: '#55D7F9',
         width: 60,
         height: 60,
         borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
+        borderColor: 'black',
+        borderWidth: 2
     },
     addButtonText: {
         fontSize: 30,
