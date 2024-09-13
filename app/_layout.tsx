@@ -1,17 +1,13 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { Stack } from 'expo-router';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootLayout() {
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -27,11 +23,75 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <Stack>
+      <Stack.Screen
+        name="index"
+        options={{
+          title: 'Tagesplaner',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 40,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="todos"
+        options={{
+          title: 'Todos',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 25,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="meetings"
+        options={{
+          title: 'Meetings',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 25,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="meeting"
+        options={{
+          title: 'Meeting',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 25,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="todo"
+        options={{
+          title: 'Todo',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 25,
+          },
+        }}
+      />
+    </Stack>
   );
 }
+
+export default RootLayout;
