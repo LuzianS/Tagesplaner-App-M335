@@ -24,8 +24,46 @@ function RootLayout() {
 
   return (
     <Stack>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="todos" />
+      <Stack.Screen
+        name="index"
+        options={{
+          title: 'Tagesplaner',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 40,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="todos"
+        options={{
+          title: 'Todos',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 25,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="meetings"
+        options={{
+          title: 'Meetings',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 25,
+          },
+        }}
+      />
     </Stack>
   );
 }

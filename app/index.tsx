@@ -11,14 +11,10 @@ function Home() {
 
     const handleChange = (selectedDate: string) => {
         setDate(selectedDate);
-        console.log("Switched date");
     };
 
     return (
         <View style={styles.container}>
-            <View style={styles.titleBackground}>
-                <Text style={styles.title}>Tagesplaner</Text>
-            </View>
 
             <View style={styles.datePickerContainer}>
                 <DatePicker
@@ -43,7 +39,7 @@ function Home() {
 
             <View style={styles.buttonContainer}>
                 <View style={styles.button}>
-                    <Link href='/todos' style={styles.buttonText}>Meetings</Link>
+                    <Link href='/meetings' style={styles.buttonText}>Meetings</Link>
                 </View>
                 <View style={styles.button}>
                     <Link href='/todos' style={styles.buttonText}>To-do-Liste</Link>
@@ -58,13 +54,8 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'white'
     },
-    title: {
-        fontSize: 40,
-        marginLeft: 5
-    },
     datePickerContainer: {
         position: 'absolute',
-        top: 60,
         left: 1,
         right: 1,
         backgroundColor: 'white',
@@ -73,7 +64,7 @@ const styles = StyleSheet.create({
     },
     selectedDate: {
         fontSize: 25,
-        marginTop: 360,
+        marginTop: '100%',
         marginLeft: 5,
     },
     boxContainer: {
@@ -86,14 +77,11 @@ const styles = StyleSheet.create({
         marginVertical: 5,
         marginRight: 5,
         borderRadius: 25,
-        marginTop: 10
+        marginTop: 20
     },
     boxText: {
         color: 'black',
         fontSize: 20,
-    },
-    titleBackground: {
-        backgroundColor: '#3848c2',
     },
     buttonContainer: {
         flexDirection: 'row',
@@ -107,7 +95,8 @@ const styles = StyleSheet.create({
         marginRight: 5,
         borderRadius: 25,
         backgroundColor: '#55D7F9',
-        marginTop: 10
+        width: '45%',
+        marginTop: '10%'
     },
     buttonText: {
         fontSize: 25,

@@ -1,8 +1,8 @@
 import { Text } from "react-native";
 
 
-export default function Todo() {
+export default function Todos() {
     return (
-        < Text > Test </Text >
+        <Text>Test Tods</Text >
     )
 }
