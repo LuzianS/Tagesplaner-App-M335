@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import { useState } from 'react';
-import { View, StyleSheet, Text, Button } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import DatePicker from 'react-native-modern-datepicker';
 import { getFormatedDate } from 'react-native-modern-datepicker';
 
@@ -39,10 +39,10 @@ function Home() {
 
             <View style={styles.buttonContainer}>
                 <View style={styles.button}>
-                    <Link href='/meetings' style={styles.buttonText}>Meetings</Link>
+                    <Link href={`/meetings`} style={styles.buttonText}>Meetings</Link>
                 </View>
                 <View style={styles.button}>
-                    <Link href='/todos' style={styles.buttonText}>To-do-Liste</Link>
+                    <Link href={`/todos?date=${date}`} style={styles.buttonText}>To-do-Liste</Link>
                 </View>
             </View>
         </View>
@@ -96,10 +96,11 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         backgroundColor: '#55D7F9',
         width: '45%',
-        marginTop: '10%'
+        marginTop: '9%'
     },
     buttonText: {
         fontSize: 25,
+        textAlign: 'center'
     }
 });
 

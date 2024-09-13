@@ -64,6 +64,32 @@ function RootLayout() {
           },
         }}
       />
+      <Stack.Screen
+        name="meeting"
+        options={{
+          title: 'Meeting',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 25,
+          },
+        }}
+      />
+      <Stack.Screen
+        name="todo"
+        options={{
+          title: 'Todo',
+          headerStyle: {
+            backgroundColor: '#3848c2',
+          },
+          headerTintColor: 'black',
+          headerTitleStyle: {
+            fontSize: 25,
+          },
+        }}
+      />
     </Stack>
   );
 }
