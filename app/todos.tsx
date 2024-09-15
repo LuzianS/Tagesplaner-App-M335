@@ -20,18 +20,26 @@ const Todos = () => {
     useEffect(() => {
         const loadTodos = async () => {
             try {
-                const storedTodos = await AsyncStorage.getItem('todos');
-                if (storedTodos) {
-                    setTodos(JSON.parse(storedTodos));
+                if (date) {
+                    const dateString = date as string;
+                    setSelectedDate(dateString);
+
+                    const storedTodos = await AsyncStorage.getItem(dateString);
+
+                    if (storedTodos) {
+                        setTodos(JSON.parse(storedTodos));
+                    }
                 }
             } catch (error) {
                 console.error('Error loading todos:', error);
             }
         };
 
+        loadTodos();
+
         const unsubscribe = navigation.addListener('focus', loadTodos);
         return unsubscribe;
-    }, [navigation]);
+    }, [date, navigation]);
 
     const renderItem = ({ item }) => (
         <View style={styles.todoItem}>
@@ -49,7 +57,7 @@ const Todos = () => {
             />
             <View style={styles.addButton}>
                 <View>
-                    <Link href='/todo' style={styles.buttonText}>+</Link>
+                    <Link href={`/todo?selectedDate=${selectedDate}`} style={styles.buttonText}>+</Link>
                 </View>
 
             </View>

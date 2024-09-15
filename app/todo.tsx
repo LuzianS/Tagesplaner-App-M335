@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { processColorsInProps } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
+
 const Todo = () => {
+    const { selectedDate } = useLocalSearchParams();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const navigation = useNavigation();  // Ensure this hook is working
+    const navigation = useNavigation();
+    const [todoListName, settodoListName] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (selectedDate) {
+            settodoListName(selectedDate as string);
+        }
+    }, [selectedDate]);
+
+
     const saveTodo = async () => {
         if (title === '' || description === '') {
             Alert.alert('Error', 'Please fill in all fields');
@@ -15,22 +26,22 @@ const Todo = () => {
         }
         try {
             const todo = { id: Date.now().toString(), title, description, completed: false };
-            const existingTodos = await AsyncStorage.getItem('todos');
-            const todos = existingTodos ? JSON.parse(existingTodos) : [];
-            todos.push(todo);
-            await AsyncStorage.setItem('todos', JSON.stringify(todos));
-            Alert.alert('Gespeichert', 'To-do erfolgreich gespeichert');
+            if (todoListName) {
+                const existingTodos = await AsyncStorage.getItem(todoListName);
+                const todos = existingTodos ? JSON.parse(existingTodos) : [];
+                todos.push(todo);
+                await AsyncStorage.setItem(todoListName, JSON.stringify(todos));
+                Alert.alert('Gespeichert', 'To-do erfolgreich gespeichert');
+            }
             setTitle('');
             setDescription('');
-            //navigation.navigate('TodosScreen');
         } catch (error) {
             Alert.alert('Error', 'Fehler beim Speichern vom To-do');
         }
     };
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Todo-Beitrag</Text>
-            <Text style={styles.date}>13.01.2022</Text>
+            <Text style={styles.header}>{selectedDate}</Text>
             <View style={styles.inputGroup}>
                 <Text style={styles.label}>To-do:</Text>
                 <TextInput
@@ -72,12 +83,6 @@ const styles = StyleSheet.create({
     header: {
         fontSize: 24,
         fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 20,
-        marginTop: 40,
-    },
-    date: {
-        fontSize: 18,
         textAlign: 'center',
         marginBottom: 20,
     },
