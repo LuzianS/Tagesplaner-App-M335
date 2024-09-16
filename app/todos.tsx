@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Link, useLocalSearchParams } from 'expo-router';
-
 
 const Todos = () => {
     const { date } = useLocalSearchParams();
@@ -20,22 +19,30 @@ const Todos = () => {
     useEffect(() => {
         const loadTodos = async () => {
             try {
-                const storedTodos = await AsyncStorage.getItem('todos');
-                if (storedTodos) {
-                    setTodos(JSON.parse(storedTodos));
+                if (date) {
+                    const dateString = date as string;
+                    setSelectedDate(dateString);
+
+                    const storedTodos = await AsyncStorage.getItem(dateString);
+
+                    if (storedTodos) {
+                        setTodos(JSON.parse(storedTodos));
+                    }
                 }
             } catch (error) {
                 console.error('Error loading todos:', error);
             }
         };
 
+        loadTodos();
+
         const unsubscribe = navigation.addListener('focus', loadTodos);
         return unsubscribe;
-    }, [navigation]);
+    }, [date, navigation]);
 
     const renderItem = ({ item }) => (
         <View style={styles.todoItem}>
-            <Text style={styles.todoText}>{item.title}</Text>
+            <Link href={`/todo?selectedDate=${selectedDate}&todoId=${item.id}`} style={styles.todoText}>{item.title}</Link>
         </View>
     );
 
@@ -49,9 +56,8 @@ const Todos = () => {
             />
             <View style={styles.addButton}>
                 <View>
-                    <Link href='/todo' style={styles.buttonText}>+</Link>
+                    <Link href={`/todo?selectedDate=${selectedDate}`} style={styles.buttonText}>+</Link>
                 </View>
-
             </View>
         </View>
     );

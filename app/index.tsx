@@ -1,21 +1,41 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import DatePicker from 'react-native-modern-datepicker';
 import { getFormatedDate } from 'react-native-modern-datepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 function Home() {
     const today = new Date();
     const startDate = getFormatedDate(today, 'YYYY/MM/DD');
     const [date, setDate] = useState(startDate);
+    const [todos, setTodos] = useState([]);
 
     const handleChange = (selectedDate: string) => {
         setDate(selectedDate);
     };
 
+    useEffect(() => {
+        const loadTodos = async () => {
+            try {
+                const storedTodos = await AsyncStorage.getItem(date);
+                if (storedTodos) {
+                    setTodos(JSON.parse(storedTodos));
+                } else {
+                    setTodos([]);
+                }
+            }
+            catch (error) {
+                console.error('Error loading todos:', error);
+                setTodos([]);
+            }
+        };
+
+        loadTodos();
+    }, [date]);
+
     return (
         <View style={styles.container}>
-
             <View style={styles.datePickerContainer}>
                 <DatePicker
                     mode='calendar'
@@ -33,7 +53,7 @@ function Home() {
                 </View>
                 <View style={styles.box}>
                     <Text style={styles.boxText}>Offene Todos:</Text>
-                    <Text>Beispiel, Daten, 1</Text>
+                    <Text>{todos.length} {todos.length === 1 ? 'ist' : 'sind'} für diesen Tag noch offen</Text>
                 </View>
             </View>
 
