@@ -1,61 +1,156 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { useLocalSearchParams } from 'expo-router';
+import DateTimePicker from 'react-native-modal-datetime-picker';
+
+interface Meeting {
+    id: string;
+    timeStart: string;
+    timeEnd: string;
+    title: string;
+    description?: string;
+    reminder?: string;
+}
 
 const Meeting = () => {
-    const [timeStart, setTimeStart] = useState('');
-    const [timeEnd, setTimeEnd] = useState('');
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [reminder, setReminder] = useState('');
+    const { selectedDate, meetingId } = useLocalSearchParams<{ selectedDate: string; meetingId: string }>();
+    const [timeStart, setTimeStart] = useState<string>('');
+    const [timeEnd, setTimeEnd] = useState<string>('');
+    const [title, setTitle] = useState<string>('');
+    const [description, setDescription] = useState<string>('');
+    const [reminder, setReminder] = useState<string>('');
+    const [isTimeStartPickerVisible, setTimeStartPickerVisibility] = useState(false);
+    const [isTimeEndPickerVisible, setTimeEndPickerVisibility] = useState(false);
+    const [isReminderPickerVisible, setReminderPickerVisibility] = useState(false);
     const navigation = useNavigation();
+
+    useEffect(() => {
+        const loadMeeting = async () => {
+            if (selectedDate && meetingId) {
+                try {
+                    const storedMeetings = await AsyncStorage.getItem(selectedDate + "/meetings");
+                    if (storedMeetings) {
+                        const meetings: Meeting[] = JSON.parse(storedMeetings);
+                        const meeting = meetings.find(m => m.id === meetingId);
+                        if (meeting) {
+                            setTimeStart(meeting.timeStart);
+                            setTimeEnd(meeting.timeEnd);
+                            setTitle(meeting.title);
+                            setDescription(meeting.description || '');
+                            setReminder(meeting.reminder || '');
+                        }
+                    }
+                } catch (error) {
+                    Alert.alert('Error', 'Fehler beim Laden des Meetings');
+                }
+            }
+        };
+
+        loadMeeting();
+    }, [selectedDate, meetingId]);
+
+    const handleTimeStartPicked = (date: Date) => {
+        setTimeStart(date.toISOString());
+        setTimeStartPickerVisibility(false);
+    };
+
+    const handleTimeEndPicked = (date: Date) => {
+        setTimeEnd(date.toISOString());
+        setTimeEndPickerVisibility(false);
+    };
+
+    const handleReminderPicked = (date: Date) => {
+        setReminder(date.toISOString());
+        setReminderPickerVisibility(false);
+    };
 
     const saveMeeting = async () => {
         if (timeStart === '' || timeEnd === '' || title === '' || reminder === '') {
-            Alert.alert('Error', 'Please fill in all fields');
+            Alert.alert('Error', 'Bitte füllen Sie alle Felder aus');
             return;
         }
 
         try {
-            const meeting = { 
-                id: Date.now().toString(),
+            const meeting: Meeting = {
+                id: meetingId || Date.now().toString(),
                 timeStart,
                 timeEnd,
                 title,
                 description,
-                reminder
+                reminder,
             };
-            const existingMeetings = await AsyncStorage.getItem('meetings');
-            const meetings = existingMeetings ? JSON.parse(existingMeetings) : [];
-            meetings.push(meeting);
 
-            await AsyncStorage.setItem('meetings', JSON.stringify(meetings));
-            Alert.alert('Gespeichert', 'Meeting erfolgreich gespeichert');
-            navigation.goBack();  // Gehe zurück zur Meeting-Liste-Seite
+            if (selectedDate) {
+                const storedMeetings = await AsyncStorage.getItem(selectedDate + "/meetings");
+                const meetings: Meeting[] = storedMeetings ? JSON.parse(storedMeetings) : [];
+                const index = meetings.findIndex(m => m.id === meeting.id);
+                if (index !== -1) {
+                    meetings[index] = meeting;
+                } else {
+                    meetings.push(meeting);
+                }
+                await AsyncStorage.setItem(selectedDate + "/meetings", JSON.stringify(meetings));
+                Alert.alert('Gespeichert', 'Meeting erfolgreich gespeichert');
+            }
+
+            navigation.goBack();
         } catch (error) {
-            Alert.alert('Error', 'Fehler beim Speichern vom Meeting');
+            Alert.alert('Error', 'Fehler beim Speichern des Meetings');
         }
     };
 
+    const deleteMeeting = async () => {
+        try {
+            if (selectedDate && meetingId) {
+                const storedMeetings = await AsyncStorage.getItem(selectedDate + "/meetings");
+                if (storedMeetings) {
+                    const meetings: Meeting[] = JSON.parse(storedMeetings);
+                    const updatedMeetings = meetings.filter(m => m.id !== meetingId);
+                    await AsyncStorage.setItem(selectedDate + "/meetings", JSON.stringify(updatedMeetings));
+                    Alert.alert('Gelöscht', 'Meeting erfolgreich gelöscht');
+                    navigation.goBack();
+                }
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Fehler beim Löschen des Meetings');
+        }
+    };
+
+    const formatTime = (isoDate: string) => {
+        if (!isoDate) {
+            return '';
+        }
+        const date = new Date(isoDate);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Tagesplaner</Text>
-            <Text style={styles.date}>13.01.2022</Text>
+            <Text style={styles.header}>{selectedDate}</Text>
 
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>Zeit:</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Startzeit (z.B. 08:00)"
-                    value={timeStart}
-                    onChangeText={setTimeStart}
+                <Text style={styles.label}>Startzeit:</Text>
+                <TouchableOpacity onPress={() => setTimeStartPickerVisibility(true)}>
+                    <Text style={styles.input}>{formatTime(timeStart) || 'Startzeit wählen'}</Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                    isVisible={isTimeStartPickerVisible}
+                    mode="time"
+                    onConfirm={handleTimeStartPicked}
+                    onCancel={() => setTimeStartPickerVisibility(false)}
                 />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Endzeit (z.B. 10:00)"
-                    value={timeEnd}
-                    onChangeText={setTimeEnd}
+                <Text style={styles.label}>Endzeit:</Text>
+                <TouchableOpacity onPress={() => setTimeEndPickerVisibility(true)}>
+                    <Text style={styles.input}>{formatTime(timeEnd) || 'Endzeit wählen'}</Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                    isVisible={isTimeEndPickerVisible}
+                    mode="time"
+                    onConfirm={handleTimeEndPicked}
+                    onCancel={() => setTimeEndPickerVisibility(false)}
                 />
             </View>
 
@@ -83,20 +178,23 @@ const Meeting = () => {
 
             <View style={styles.inputGroup}>
                 <Text style={styles.label}>Erinnerung:</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Erinnerungszeit (z.B. 09:45)"
-                    value={reminder}
-                    onChangeText={setReminder}
+                <TouchableOpacity onPress={() => setReminderPickerVisibility(true)}>
+                    <Text style={styles.input}>{formatTime(reminder) || 'Erinnerung wählen'}</Text>
+                </TouchableOpacity>
+                <DateTimePicker
+                    isVisible={isReminderPickerVisible}
+                    mode="time"
+                    onConfirm={handleReminderPicked}
+                    onCancel={() => setReminderPickerVisibility(false)}
                 />
             </View>
 
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={saveMeeting}>
-                    <Text style={styles.buttonText}>Save</Text>
+                    <Text style={styles.buttonText}>Speichern</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={() => Alert.alert('Meeting gelöscht')}>
-                    <Text style={styles.buttonText}>Delete</Text>
+                <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={deleteMeeting}>
+                    <Text style={styles.buttonText}>Löschen</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -111,11 +209,6 @@ const styles = StyleSheet.create({
     header: {
         fontSize: 24,
         fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    date: {
-        fontSize: 18,
         textAlign: 'center',
         marginBottom: 20,
     },
