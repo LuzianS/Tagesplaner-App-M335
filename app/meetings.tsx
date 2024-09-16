@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Alert, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 import { Link, useLocalSearchParams } from 'expo-router';
+
+interface Meeting {
+    id: string;
+    timeStart: string;
+    timeEnd: string;
+    title: string;
+    description?: string;
+    reminder?: string;
+}
 
 const Meetings = () => {
     const { date } = useLocalSearchParams();
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
-    const [meetings, setMeetings] = useState([]);
+    const [meetings, setMeetings] = useState<Meeting[]>([]);
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -19,22 +28,54 @@ const Meetings = () => {
     useEffect(() => {
         const loadMeetings = async () => {
             try {
-                const storedMeetings = await AsyncStorage.getItem('meetings');
-                if (storedMeetings) {
-                    setMeetings(JSON.parse(storedMeetings));
+                if (selectedDate) {
+                    const storedMeetings = await AsyncStorage.getItem(selectedDate + "/meetings");
+                    if (storedMeetings) {
+                        const parsedMeetings = JSON.parse(storedMeetings);
+                        const sortedMeetings = parsedMeetings.sort((a: Meeting, b: Meeting) =>
+                            new Date(a.timeStart).getTime() - new Date(b.timeStart).getTime()
+                        );
+                        setMeetings(sortedMeetings);
+                    } else {
+                        setMeetings([]);
+                    }
                 }
             } catch (error) {
-                Alert.alert('Error', 'Fehler beim laden der Meetings');
+                Alert.alert('Error', 'Fehler beim Laden der Meetings');
             }
         };
 
         loadMeetings();
-    }, []);
 
-    const renderItem = ({ item }) => (
+        const unsubscribe = navigation.addListener('focus', loadMeetings);
+        return unsubscribe;
+    }, [selectedDate, navigation]);
+
+    const formatTime = (isoDate: string) => {
+        const date = new Date(isoDate);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    const calculateDuration = (start: string, end: string) => {
+        const startTime = new Date(start);
+        const endTime = new Date(end);
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const minutes = Math.floor(durationMs / 1000 / 60);
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return `${hours}h ${remainingMinutes}m`;
+    };
+
+    const renderItem = ({ item }: { item: Meeting }) => (
         <View style={styles.meetingItem}>
-            <Text>{item.timeStart} - {item.timeEnd} ({item.duration})</Text>
-            <Text>{item.title}</Text>
+            <Link href={`/meeting?selectedDate=${selectedDate}&meetingId=${item.id}`}>
+                <View style={{ flexDirection: 'column' }}>
+                    <Text style={{ fontWeight: 'bold' }}>
+                        {formatTime(item.timeStart)} - {formatTime(item.timeEnd)}, {calculateDuration(item.timeStart, item.timeEnd)}
+                    </Text>
+                    <Text>{item.title}</Text>
+                </View>
+            </Link>
         </View>
     );
 
@@ -47,10 +88,9 @@ const Meetings = () => {
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
             />
+
             <View style={styles.addButton}>
-                <View>
-                    <Link href='/meeting' style={styles.buttonText}>+</Link>
-                </View>
+                <Link href={`/meeting?selectedDate=${selectedDate}`} style={styles.buttonText}>+</Link>
             </View>
         </View>
     );

@@ -11,6 +11,7 @@ function Home() {
     const startDate = getFormatedDate(today, 'YYYY/MM/DD');
     const [date, setDate] = useState(startDate);
     const [todos, setTodos] = useState([]);
+    const [meetings, setMeetings] = useState([]);
     const navigation = useNavigation();
 
     const handleChange = (selectedDate: string) => {
@@ -39,6 +40,28 @@ function Home() {
         return unsubscribe;
     }, [date]);
 
+    useEffect(() => {
+        const loadMeetings = async () => {
+            try {
+                const storedMeetings = await AsyncStorage.getItem(date + "/meetings");
+                if (storedMeetings) {
+                    setMeetings(JSON.parse(storedMeetings));
+                } else {
+                    setMeetings([]);
+                }
+            }
+            catch (error) {
+                Alert.alert('Error', 'Fehler beim Laden der Meetings');
+                setMeetings([]);
+            }
+        };
+
+        loadMeetings();
+
+        const unsubscribe = navigation.addListener('focus', loadMeetings);
+        return unsubscribe;
+    }, [date]);
+
     return (
         <View style={styles.container}>
             <View style={styles.datePickerContainer}>
@@ -53,11 +76,11 @@ function Home() {
 
             <View style={styles.boxContainer}>
                 <View style={styles.box}>
-                    <Text style={styles.boxText}>Nächstes Meeting:</Text>
-                    <Text>Beispiel, Daten, XYZ</Text>
+                    <Text style={styles.boxText}>Meetings:</Text>
+                    <Text>{meetings.length} {meetings.length === 1 ? 'ist' : 'sind'} für diesen Tag noch offen</Text>
                 </View>
                 <View style={styles.box}>
-                    <Text style={styles.boxText}>Offene Todos:</Text>
+                    <Text style={styles.boxText}>Todos:</Text>
                     <Text>{todos.length} {todos.length === 1 ? 'ist' : 'sind'} für diesen Tag noch offen</Text>
                 </View>
             </View>
