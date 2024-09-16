@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+
+interface Todo {
+    id: string;
+    title: string;
+    description: string;
+}
 
 const Todo = () => {
-    const { selectedDate, todoId } = useLocalSearchParams();
+    const { selectedDate, todoId } = useLocalSearchParams<{ selectedDate: string, todoId: string }>();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const navigation = useNavigation();
@@ -21,7 +27,7 @@ const Todo = () => {
                 try {
                     const todos = await AsyncStorage.getItem(selectedDate);
                     if (todos) {
-                        const todosArray = JSON.parse(todos);
+                        const todosArray: Todo[] = JSON.parse(todos);
                         const todo = todosArray.find(t => t.id === todoId);
                         if (todo) {
                             setTitle(todo.title);
@@ -29,7 +35,7 @@ const Todo = () => {
                         }
                     }
                 } catch (error) {
-                    console.error('Error loading todo:', error);
+                    Alert.alert('Error', 'Fehler beim laden des Todos');
                 }
             }
         };
@@ -39,14 +45,14 @@ const Todo = () => {
 
     const saveTodo = async () => {
         if (title === '' || description === '') {
-            Alert.alert('Error', 'Please fill in all fields');
+            Alert.alert('Error', 'Bitte füllen Sie alle Felder aus');
             return;
         }
         try {
-            const todo = { id: todoId || Date.now().toString(), title, description, completed: false };
+            const todo: Todo = { id: todoId || Date.now().toString(), title, description };
             if (todoListName) {
                 const existingTodos = await AsyncStorage.getItem(todoListName);
-                const todos = existingTodos ? JSON.parse(existingTodos) : [];
+                const todos: Todo[] = existingTodos ? JSON.parse(existingTodos) : [];
 
                 const index = todos.findIndex(t => t.id === todo.id);
                 if (index !== -1) {
@@ -71,7 +77,7 @@ const Todo = () => {
             if (todoListName && todoId) {
                 const existingTodos = await AsyncStorage.getItem(todoListName);
                 if (existingTodos) {
-                    const todos = JSON.parse(existingTodos);
+                    const todos: Todo[] = JSON.parse(existingTodos);
                     const updatedTodos = todos.filter(t => t.id !== todoId);
                     await AsyncStorage.setItem(todoListName, JSON.stringify(updatedTodos));
                     Alert.alert('Gelöscht', 'To-do erfolgreich gelöscht');

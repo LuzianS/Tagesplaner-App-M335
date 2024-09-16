@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Link, useLocalSearchParams } from 'expo-router';
 
+interface Todo {
+    id: string;
+    title: string;
+    description: string;
+}
+
 const Todos = () => {
     const { date } = useLocalSearchParams();
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
-    const [todos, setTodos] = useState([]);
+    const [todos, setTodos] = useState<Todo[]>([]);
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -26,11 +32,11 @@ const Todos = () => {
                     const storedTodos = await AsyncStorage.getItem(dateString);
 
                     if (storedTodos) {
-                        setTodos(JSON.parse(storedTodos));
+                        setTodos(JSON.parse(storedTodos) as Todo[]);
                     }
                 }
             } catch (error) {
-                console.error('Error loading todos:', error);
+                Alert.alert('Error', 'Fehler beim laden der Todos');
             }
         };
 
@@ -40,7 +46,7 @@ const Todos = () => {
         return unsubscribe;
     }, [date, navigation]);
 
-    const renderItem = ({ item }) => (
+    const renderItem = ({ item }: { item: Todo }) => (
         <View style={styles.todoItem}>
             <Link href={`/todo?selectedDate=${selectedDate}&todoId=${item.id}`} style={styles.todoText}>{item.title}</Link>
         </View>

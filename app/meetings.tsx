@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Alert, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useLocalSearchParams } from 'expo-router';
 
 const Meetings = () => {
+    const { date } = useLocalSearchParams();
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [meetings, setMeetings] = useState([]);
     const navigation = useNavigation();
+
+    useEffect(() => {
+        if (date) {
+            setSelectedDate(date as string);
+        }
+    }, [date]);
 
     useEffect(() => {
         const loadMeetings = async () => {
@@ -16,7 +24,7 @@ const Meetings = () => {
                     setMeetings(JSON.parse(storedMeetings));
                 }
             } catch (error) {
-                console.error('Error loading meetings:', error);
+                Alert.alert('Error', 'Fehler beim laden der Meetings');
             }
         };
 
@@ -32,8 +40,7 @@ const Meetings = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Tagesplaner</Text>
-            <Text style={styles.date}>16.02.2024</Text>
+            <Text style={styles.header}>{selectedDate}</Text>
 
             <FlatList
                 data={meetings}
@@ -61,11 +68,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 20,
     },
-    date: {
-        fontSize: 18,
-        textAlign: 'center',
-        marginBottom: 20,
-    },
     meetingItem: {
         padding: 10,
         borderBottomWidth: 1,
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         fontSize: 30,
-        color: 'white',
+        color: 'black',
     },
 });
 

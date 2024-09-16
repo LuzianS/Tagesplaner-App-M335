@@ -1,15 +1,17 @@
 import { Link } from 'expo-router';
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Alert } from 'react-native';
 import DatePicker from 'react-native-modern-datepicker';
 import { getFormatedDate } from 'react-native-modern-datepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 function Home() {
     const today = new Date();
     const startDate = getFormatedDate(today, 'YYYY/MM/DD');
     const [date, setDate] = useState(startDate);
     const [todos, setTodos] = useState([]);
+    const navigation = useNavigation();
 
     const handleChange = (selectedDate: string) => {
         setDate(selectedDate);
@@ -26,12 +28,15 @@ function Home() {
                 }
             }
             catch (error) {
-                console.error('Error loading todos:', error);
+                Alert.alert('Error', 'Fehler beim Laden der Todos');
                 setTodos([]);
             }
         };
 
         loadTodos();
+
+        const unsubscribe = navigation.addListener('focus', loadTodos);
+        return unsubscribe;
     }, [date]);
 
     return (
@@ -59,7 +64,7 @@ function Home() {
 
             <View style={styles.buttonContainer}>
                 <View style={styles.button}>
-                    <Link href={`/meetings`} style={styles.buttonText}>Meetings</Link>
+                    <Link href={`/meetings?date=${date}`} style={styles.buttonText}>Meetings</Link>
                 </View>
                 <View style={styles.button}>
                     <Link href={`/todos?date=${date}`} style={styles.buttonText}>To-do-Liste</Link>
