@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Link, useLocalSearchParams } from 'expo-router';
-
 
 const Todos = () => {
     const { date } = useLocalSearchParams();
@@ -43,7 +42,7 @@ const Todos = () => {
 
     const renderItem = ({ item }) => (
         <View style={styles.todoItem}>
-            <Text style={styles.todoText}>{item.title}</Text>
+            <Link href={`/todo?selectedDate=${selectedDate}&todoId=${item.id}`} style={styles.todoText}>{item.title}</Link>
         </View>
     );
 
@@ -59,7 +58,6 @@ const Todos = () => {
                 <View>
                     <Link href={`/todo?selectedDate=${selectedDate}`} style={styles.buttonText}>+</Link>
                 </View>
-
             </View>
         </View>
     );

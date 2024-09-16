@@ -3,21 +3,39 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'reac
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { Link, useLocalSearchParams } from 'expo-router';
-import { processColorsInProps } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
 
 const Todo = () => {
-    const { selectedDate } = useLocalSearchParams();
+    const { selectedDate, todoId } = useLocalSearchParams();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const navigation = useNavigation();
-    const [todoListName, settodoListName] = useState<string | null>(null);
+    const [todoListName, setTodoListName] = useState<string | null>(null);
 
     useEffect(() => {
         if (selectedDate) {
-            settodoListName(selectedDate as string);
+            setTodoListName(selectedDate as string);
         }
-    }, [selectedDate]);
 
+        const loadTodo = async () => {
+            if (selectedDate && todoId) {
+                try {
+                    const todos = await AsyncStorage.getItem(selectedDate);
+                    if (todos) {
+                        const todosArray = JSON.parse(todos);
+                        const todo = todosArray.find(t => t.id === todoId);
+                        if (todo) {
+                            setTitle(todo.title);
+                            setDescription(todo.description);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading todo:', error);
+                }
+            }
+        };
+
+        loadTodo();
+    }, [selectedDate, todoId]);
 
     const saveTodo = async () => {
         if (title === '' || description === '') {
@@ -25,25 +43,51 @@ const Todo = () => {
             return;
         }
         try {
-            const todo = { id: Date.now().toString(), title, description, completed: false };
+            const todo = { id: todoId || Date.now().toString(), title, description, completed: false };
             if (todoListName) {
                 const existingTodos = await AsyncStorage.getItem(todoListName);
                 const todos = existingTodos ? JSON.parse(existingTodos) : [];
-                todos.push(todo);
+
+                const index = todos.findIndex(t => t.id === todo.id);
+                if (index !== -1) {
+                    todos[index] = todo;
+                } else {
+                    todos.push(todo);
+                }
+
                 await AsyncStorage.setItem(todoListName, JSON.stringify(todos));
                 Alert.alert('Gespeichert', 'To-do erfolgreich gespeichert');
             }
             setTitle('');
             setDescription('');
+            navigation.goBack();
         } catch (error) {
             Alert.alert('Error', 'Fehler beim Speichern vom To-do');
         }
     };
+
+    const deleteTodo = async () => {
+        try {
+            if (todoListName && todoId) {
+                const existingTodos = await AsyncStorage.getItem(todoListName);
+                if (existingTodos) {
+                    const todos = JSON.parse(existingTodos);
+                    const updatedTodos = todos.filter(t => t.id !== todoId);
+                    await AsyncStorage.setItem(todoListName, JSON.stringify(updatedTodos));
+                    Alert.alert('Gelöscht', 'To-do erfolgreich gelöscht');
+                    navigation.goBack();
+                }
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Fehler beim Löschen vom To-do');
+        }
+    };
+
     return (
         <View style={styles.container}>
             <Text style={styles.header}>{selectedDate}</Text>
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>To-do:</Text>
+                <Text style={styles.label}>Titel:</Text>
                 <TextInput
                     style={styles.input}
                     placeholder="Titel"
@@ -63,18 +107,15 @@ const Todo = () => {
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={saveTodo}>
                     <Text style={styles.buttonText}>Speichern</Text>
-                    <View>
-                        <Link href='/todos' style={styles.buttonText}>
-                        </Link>
-                    </View>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={() => Alert.alert('Gelöscht')}>
+                <TouchableOpacity style={[styles.button, styles.deleteButton]} onPress={deleteTodo}>
                     <Text style={styles.buttonText}>Löschen</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 };
+
 const styles = StyleSheet.create({
     container: {
         padding: 20,
@@ -126,4 +167,5 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
 export default Todo;
